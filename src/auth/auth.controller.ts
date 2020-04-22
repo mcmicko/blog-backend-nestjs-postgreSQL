@@ -1,6 +1,6 @@
 import { Controller, Post, Body, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDTO, LoginDTO } from '../models/user.dto';
+import { RegisterDTO, LoginDTO } from '../models/user.model';
 
 @Controller('users')
 export class AuthController {
@@ -13,6 +13,6 @@ export class AuthController {
 
   @Post('/login')
   login(@Body(ValidationPipe) credentials: LoginDTO) {
-    return this.authService.login(credentials)
+    return this.authService.login(credentials);
   }
 }
