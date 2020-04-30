@@ -4,7 +4,7 @@ import {
   BeforeInsert,
   ManyToOne,
   ManyToMany,
-  JoinColumn,
+  JoinTable,
   RelationCount,
 } from 'typeorm';
 import { classToPlain } from 'class-transformer';
@@ -31,7 +31,7 @@ export class ArticleEntity extends AbstractEntity {
     user => user.favorites,
     { eager: true },
   )
-  @JoinColumn()
+  @JoinTable()
   favoritedBy: UserEntity[];
 
   @RelationCount((article: ArticleEntity) => article.favoritedBy)
@@ -61,7 +61,7 @@ export class ArticleEntity extends AbstractEntity {
 
   toArticle(user?: UserEntity) {
     let favorited = null;
-    if (user) {
+    if (user && this.favoritedBy) {
       favorited = this.favoritedBy.includes(user);
     }
     const article: any = this.toJSON();
