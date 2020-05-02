@@ -7,11 +7,13 @@ import {
   ManyToMany,
   OneToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { IsEmail } from 'class-validator';
 import { Exclude, classToPlain } from 'class-transformer';
 import * as bcrypt from 'bcryptjs';
 import { ArticleEntity } from './article.entity';
+import { CommentEntity } from './comment.entity';
 
 @Entity('users')
 export class UserEntity extends AbstractEntity {
@@ -32,11 +34,11 @@ export class UserEntity extends AbstractEntity {
   @Exclude()
   password: string;
 
-  @JoinTable()
   @ManyToMany(
     type => UserEntity,
     user => user.followee,
   )
+  @JoinTable()
   followers: UserEntity[];
 
   @ManyToMany(
@@ -45,17 +47,22 @@ export class UserEntity extends AbstractEntity {
   )
   followee: UserEntity[];
 
-  @OneToOne(
+  @OneToMany(
     type => ArticleEntity,
     article => article.author,
   )
   articles: ArticleEntity[];
 
+  @OneToMany(
+    type => CommentEntity,
+    comment => comment.author,
+  )
+  comments: CommentEntity[];
+
   @ManyToMany(
     type => ArticleEntity,
     article => article.favoritedBy,
   )
-  @JoinColumn()
   favorites: ArticleEntity[];
 
   // TODO: add following

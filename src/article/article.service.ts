@@ -9,6 +9,7 @@ import {
   FindAllQuery,
   FindFeedQuery,
 } from 'src/models/article.model';
+import { TagEntity } from 'src/entities/tag.entity';
 
 @Injectable()
 export class ArticleService {
@@ -16,7 +17,18 @@ export class ArticleService {
     @InjectRepository(ArticleEntity)
     private articleRepo: Repository<ArticleEntity>,
     @InjectRepository(UserEntity) private userRepo: Repository<UserEntity>,
-  ) {}
+    @InjectRepository(TagEntity) private tagRepo: Repository<TagEntity>
+  ) { }
+
+  private async upsertTags(tagList: string[]) {
+    const foundTags = await this.tagRepo.find({
+      where: tagList.map(t => (
+        { tag: t }
+      ))
+    })
+    const newTags = tagList.filter(t => !foundTags.map(t => t.tag).includes(t))
+    await Promise.all(this.tagRepo.create(newTags.map(t => ({ tag: t }))).map(t => t.save()))
+  }
 
   async findAll(user: UserEntity, query: FindAllQuery) {
     let findOptions: any = {
@@ -67,8 +79,8 @@ export class ArticleService {
   async createArticle(user: UserEntity, data: CreateArticleDto) {
     const article = this.articleRepo.create(data);
     article.author = user;
+    await this.upsertTags(data.tagList);
     const { slug } = await article.save();
-
     return (await this.articleRepo.findOne({ slug })).toArticle(user);
   }
 
@@ -91,6 +103,7 @@ export class ArticleService {
 
   async favoriteArticle(slug: string, user: UserEntity) {
     const article = await this.findBySlug(slug);
+    console.log(article.favoritedBy)
     article.favoritedBy.push(user);
     await article.save();
     return (await this.findBySlug(slug)).toArticle(user);
@@ -98,8 +111,9 @@ export class ArticleService {
 
   async unfavoriteArticle(slug: string, user: UserEntity) {
     const article = await this.findBySlug(slug);
+    console.log(article.favoritedBy)
     article.favoritedBy = article.favoritedBy.filter(fav => fav.id !== user.id);
     await article.save();
-    return (await article.toArticle(user)).toArticle(user);
+    return (await this.findBySlug(slug)).toArticle(user);
   }
 }

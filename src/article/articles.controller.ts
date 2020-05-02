@@ -21,10 +21,12 @@ import {
   FindFeedQuery,
 } from 'src/models/article.model';
 import { OptionalAuthGuard } from 'src/auth/optional-auth.guard';
+import { CommentsService } from './comments.service';
+import { CreateCommentDTO } from 'src/models/comment.model';
 
 @Controller('articles')
 export class ArticleController {
-  constructor(private articleService: ArticleService) {}
+  constructor(private articleService: ArticleService, private commentService: CommentsService) { }
 
   @Get()
   @UseGuards(new OptionalAuthGuard())
@@ -72,6 +74,24 @@ export class ArticleController {
     return { article };
   }
 
+  @Get('/:slug/comments')
+  async findComments(@Param() slug: string, @User() user: UserEntity) {
+    const comments = await this.commentService.findByArticleSlug(slug)
+    return { comments }
+  }
+
+  @Post('/:slug/comments')
+  async createComment(@User() user: UserEntity, @Body(ValidationPipe) data: { comment: CreateCommentDTO }) {
+    const comment = await this.commentService.createComment(user, data.comment);
+    return { comment };
+  }
+
+  @Delete('/:slug/comments/:id')
+  async deleteComment(@Param('id') id: number, @User() user: UserEntity) {
+    const comment = await this.commentService.deleteComment(user, id)
+    return { comment }
+  }
+
   @Delete('/:slug')
   @UseGuards(AuthGuard())
   async deleteArticle(@Param() slug: string, @User() user: UserEntity) {
@@ -87,10 +107,7 @@ export class ArticleController {
   }
 
   @Delete('/:slug/favorite')
-  async unfavoriteArticle(
-    @Param('slug') slug: string,
-    @User() user: UserEntity,
-  ) {
+  async unfavoriteArticle(@Param('slug') slug: string, @User() user: UserEntity) {
     const article = await this.articleService.unfavoriteArticle(slug, user);
     return { article };
   }
