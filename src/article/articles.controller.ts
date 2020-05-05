@@ -10,6 +10,7 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger'
 import { ArticleService } from './article.service';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/auth/user.decorator';
@@ -37,6 +38,7 @@ export class ArticleController {
 
   @Get('/feed')
   @UseGuards(AuthGuard())
+  @ApiBearerAuth()
   async findFeed(@User() user: UserEntity, @Query() query: FindFeedQuery) {
     const articles = await this.articleService.findFeed(user, query);
     return { articles, articlesCount: articles.length };
